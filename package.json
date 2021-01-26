@@ -11,16 +11,37 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:zakrivi.helloWorld"
+		"*"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
-		"commands": [
-			{
-				"command": "zakrivi.helloWorld",
-				"title": "Hello World"
+		"configuration": {
+			"title": "",
+			"properties": {
+			  "my-ext.alias": {
+				"type": "object",
+				"default": {
+				  "@": "src"
+				},
+				"description": "路径别名",
+				"scope": "resource"
+			  },
+			  "my-ext.languages": {
+				"type": "array",
+				"items": {
+				  "type": "string"
+				},
+				"default": [
+				  "javascript",
+				  "typescript",
+				  "scss",
+				  "vue"
+				],
+				"description": "支持的文件类型",
+				"scope": "resource"
+			  }
 			}
-		]
+		  }
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
@@ -42,5 +63,9 @@
 		"mocha": "^8.1.3",
 		"typescript": "^4.1.2",
 		"vscode-test": "^1.4.1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/zakrivi/vscode-enhanced"
 	}
 }
