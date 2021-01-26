@@ -26,7 +26,7 @@ export default class GotoDefinition implements DefinitionProvider {
     }
 
     get configuration() {
-        return workspace.getConfiguration('my-ext')
+        return workspace.getConfiguration('enhanced')
     }
 
     isValid(options: { document: TextDocument, position: Position }) {
@@ -58,19 +58,24 @@ export default class GotoDefinition implements DefinitionProvider {
                 if (!match) {
                     return undefined
                 }
-                let matchPath = ''
                 if (path.isAbsolute(match[1])) {
                     targetPath = workspacePath
                 } else {
+                    const aliasReg = new RegExp('^~' + `(${aliasKey})`)
                     if (aliasReg.test(match[1])) {
-                        const matchPath = match[1].replace(aliasReg, key => (<any>this.alias)?.[key])
+                        const matchPath = match[1].replace(aliasReg, key => {
+                            const alias = <any>this.alias
+                            let result = alias[key]
+                            if(!result && /^~/.test(key)){
+                                result = alias[key.replace(/^~/,'')]
+                            }
+                            return result
+                        })
                         targetPath = path.join(workspacePath, matchPath)
                     } else {
                         targetPath = path.resolve(hoverPath, match[1])
                     }
                 }
-
-
                 break
             }
 
@@ -156,14 +161,13 @@ export default class GotoDefinition implements DefinitionProvider {
         }
 
 
-        console.log('targetPath: ', targetPath)
         if (!targetPath) {
             return undefined
         }
-
+        console.log('返回文件: ', targetPath)
         const originSelectionRange = document.lineAt(position).range
         const targetUri = Uri.file(targetPath || '')
-        const targetRange = new Range(0, 0, 10, 0)
+        const targetRange = new Range(0, 0, 10000, 0)
         // const targetSelectionRange = new Range(0, 0, 3, 0)
         return [{
             originSelectionRange,
