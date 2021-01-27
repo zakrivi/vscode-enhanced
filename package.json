@@ -2,8 +2,9 @@
 	"name": "vscode-enhanced",
 	"displayName": "Enhanced",
 	"description": "vscode定制化的功能增强",
-	"version": "0.0.1",
+	"version": "0.0.3",
 	"publisher": "zakrivi",
+	"icon":"enhanced_icon.png",
 	"engines": {
 		"vscode": "^1.52.0"
 	},
@@ -38,8 +39,8 @@
 					"default": [
 						"javascript",
 						"typescript",
-						"scss",
-						"vue"
+						"vue",
+						"scss"
 					],
 					"description": "支持的文件类型",
 					"scope": "resource"

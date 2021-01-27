@@ -1,9 +1,5 @@
-# Change Log
+### 0.0.3
 
-All notable changes to the "zakrivi" extension will be documented in this file.
-
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
-
-## [Unreleased]
-
-- Initial release
+- 别名配置
+- 部分文件支持跳转功能
+- 文档说明

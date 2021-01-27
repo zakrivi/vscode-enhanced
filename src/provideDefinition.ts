@@ -1,6 +1,9 @@
 import { CancellationToken, DefinitionProvider, Position, Range, TextDocument, Uri, workspace } from 'vscode'
 import * as path from 'path'
 import * as fs from 'fs'
+import { scssPath } from './utils/languages/scss'
+import { vuePath } from './utils/languages/vue'
+import { javascriptPath } from './utils/languages/javascript'
 
 interface IgetDefinition {
     document: TextDocument,
@@ -43,137 +46,46 @@ export default class GotoDefinition implements DefinitionProvider {
 
     async getDefinition({ document, position }: IgetDefinition) {
         const workspaceFolder = (workspace.workspaceFolders || [])[0] // 当前工作区信息
-        const workspaceName = workspaceFolder.name // 工作区名称
         const workspacePath = workspaceFolder.uri.fsPath// 工作区绝对路径
         const hoverPath = path.dirname(document.fileName) // 正在操作的文件所在的文件夹绝对路径
         const lineText = document.lineAt(position).text.trim() // 鼠标选中的行字符串
-        const aliasKey = Object.keys(this.alias).sort((a, b) => b.length - a.length).join('|')
-        const aliasReg = new RegExp('^' + `(${aliasKey})`)
 
         console.log(lineText)
-        let targetPath: string = ''
+        let targetPath: string | undefined = ''
         switch (document.languageId) {
             case 'scss': {
-                const match = lineText.match(scssImport)
-                if (!match) {
-                    return undefined
-                }
-                if (path.isAbsolute(match[1])) {
-                    targetPath = workspacePath
-                } else {
-                    const aliasReg = new RegExp('^~' + `(${aliasKey})`)
-                    if (aliasReg.test(match[1])) {
-                        const matchPath = match[1].replace(aliasReg, key => {
-                            const alias = <any>this.alias
-                            let result = alias[key]
-                            if(!result && /^~/.test(key)){
-                                result = alias[key.replace(/^~/,'')]
-                            }
-                            return result
-                        })
-                        targetPath = path.join(workspacePath, matchPath)
-                    } else {
-                        targetPath = path.resolve(hoverPath, match[1])
-                    }
-                }
+                targetPath = scssPath(lineText, { alias: this.alias, workspacePath })
                 break
             }
-
             case 'vue': {
-                const match = lineText.match(jsImportReg)
-                if (!match) {
-                    return undefined
+                targetPath = scssPath(lineText, { alias: this.alias, workspacePath })
+                if (!targetPath) {
+                    targetPath = vuePath(lineText, { alias: this.alias, workspacePath, hoverPath })
                 }
-                const pathStr = match[match.length - 1]
-                if (path.extname(pathStr)) {
-                    console.log('有后缀')
-                    // 有后缀
-                    return undefined
-                } else {
-                    // 无后缀
-                    if (aliasReg.test(pathStr)) {
-                        // 有别名
-                        const matchPath = pathStr.replace(aliasReg, key => (<any>this.alias)?.[key])
-                        targetPath = path.join(workspacePath, matchPath)
-                    } else {
-                        targetPath = path.resolve(hoverPath, pathStr)
-                    }
-
-                    if (fs.existsSync(targetPath + '.js') || fs.existsSync(targetPath + path.sep + 'index.js')) {
-                        console.log('已经存在js文件')
-                        return undefined
-                    }
-                    
-                    console.log('找不到默认js文件')
-                    const suffix = ['.vue', path.sep + 'index.vue'].find(ext => {
-                        return fs.existsSync(targetPath + ext)
-                    })
-                    if (suffix) {
-                        targetPath += suffix
-                    } else {
-                        return undefined
-                    }
-                }
-
                 break
             }
-
+            case 'typescript':
             case 'javascript': {
-                const match = lineText.match(jsImportReg)
-                if (!match) {
-                    return undefined
-                }
-                const pathStr = match[match.length - 1]
-                if (path.extname(pathStr)) {
-                    // 有后缀
-                    if (path.extname(pathStr) === 'js') {
-                        return undefined
-                    } else {
-                        if (aliasReg.test(pathStr)) {
-                            // 有别名
-                            const matchPath = pathStr.replace(aliasReg, key => (<any>this.alias)?.[key])
-                            targetPath = path.join(workspacePath, matchPath)
-                        } else {
-                            targetPath = path.resolve(hoverPath, pathStr)
-                        }
-                    }
-                } else {
-                    // 无后缀
-                    if (aliasReg.test(pathStr)) {
-                        // 有别名
-                        const matchPath = pathStr.replace(aliasReg, key => (<any>this.alias)?.[key])
-                        targetPath = path.join(workspacePath, matchPath)
-                    } else {
-                        targetPath = path.resolve(hoverPath, pathStr)
-                    }
-
-                    const suffix = ['.vue', path.sep + 'index.vue'].find(ext => {
-                        return fs.existsSync(targetPath + ext)
-                    })
-                    if (suffix) {
-                        targetPath += suffix
-                    } else {
-                        return undefined
-                    }
+                targetPath = javascriptPath(lineText, { alias: this.alias, workspacePath, hoverPath })
+                if (!targetPath) {
+                    targetPath = vuePath(lineText, { alias: this.alias, workspacePath, hoverPath })
                 }
                 break
             }
         }
 
-
-        if (!targetPath) {
+        if (targetPath) {
+            console.log('返回文件: ', targetPath)
+            const originSelectionRange = document.lineAt(position).range
+            const targetUri = Uri.file(targetPath || '')
+            const targetRange = new Range(0, 0, 100, 0)
+            return [{
+                originSelectionRange,
+                targetUri,
+                targetRange,
+            }]
+        } else {
             return undefined
         }
-        console.log('返回文件: ', targetPath)
-        const originSelectionRange = document.lineAt(position).range
-        const targetUri = Uri.file(targetPath || '')
-        const targetRange = new Range(0, 0, 10000, 0)
-        // const targetSelectionRange = new Range(0, 0, 3, 0)
-        return [{
-            originSelectionRange,
-            targetUri,
-            targetRange,
-            // targetSelectionRange
-        }]
     }
 }
