@@ -2,8 +2,9 @@
 	"name": "vscode-enhanced",
 	"displayName": "Enhanced",
 	"description": "vscode定制化的功能增强",
-	"version": "0.0.1",
+	"version": "0.0.3",
 	"publisher": "zakrivi",
+	"icon":"enhanced_icon.png",
 	"engines": {
 		"vscode": "^1.52.0"
 	},
@@ -18,30 +19,34 @@
 		"configuration": {
 			"title": "",
 			"properties": {
-			  "my-ext.alias": {
-				"type": "object",
-				"default": {
-				  "@": "src"
+				"enhanced.alias": {
+					"type": "object",
+					"default": {},
+					"description": "路径别名映射。例如：{@:src}",
+					"scope": "resource",
+					"properties":{
+						"": {
+							"type": "string",
+							"default": ""
+						}
+					}
 				},
-				"description": "路径别名",
-				"scope": "resource"
-			  },
-			  "my-ext.languages": {
-				"type": "array",
-				"items": {
-				  "type": "string"
-				},
-				"default": [
-				  "javascript",
-				  "typescript",
-				  "scss",
-				  "vue"
-				],
-				"description": "支持的文件类型",
-				"scope": "resource"
-			  }
+				"enhanced.languages": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [
+						"javascript",
+						"typescript",
+						"vue",
+						"scss"
+					],
+					"description": "支持的文件类型",
+					"scope": "resource"
+				}
 			}
-		  }
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
